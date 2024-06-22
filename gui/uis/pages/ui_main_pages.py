@@ -702,16 +702,18 @@ class Ui_MainPages(object):
         try:
             if platform.system() == 'Darwin':  # macOS
                 print("CORRECT OPERATING SYSTEM")
-                subprocess.run(["lp", pdf_filename], check=True)
+                subprocess.run(["lp", "-n", "2", pdf_filename], check=True)
                 print(f"PDF '{pdf_filename}' sent to printer successfully.")
             elif platform.system() == 'Windows':
                 # Assuming you have Acrobat Reader or Foxit Reader installed
-                subprocess.run(["cmd", "/c", "start", "/min", "AcroRd32.exe", "/t", pdf_filename], check=True)
+                for _ in range(2):  # Print twice
+                    subprocess.run(["cmd", "/c", "start", "/min", "AcroRd32.exe", "/t", pdf_filename], check=True)
                 print(f"PDF '{pdf_filename}' sent to printer successfully.")
             else:
                 print(f"Unsupported operating system: {platform.system()}. Cannot print PDF.")
         except subprocess.CalledProcessError as e:
             print(f"Error printing PDF '{pdf_filename}': {e}")
+
 
     ##def print_receipt(self):
         # Create printer object

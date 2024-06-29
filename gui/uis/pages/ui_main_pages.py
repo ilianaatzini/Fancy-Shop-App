@@ -26,6 +26,7 @@ from functools import partial
 import subprocess
 import platform
 import os
+from sales_manager import SalesManager
 
 class Ui_MainPages(object):
 
@@ -51,6 +52,7 @@ class Ui_MainPages(object):
         self.page_1_layout.setContentsMargins(5, 5, 5, 5)
 
         #self.center_page_layout.addWidget(self.logo)
+        self.sales_manager = SalesManager()
 
         self.sellings_button = PyPushButton("Πωλήσεις",
                                                 radius=8,
@@ -248,16 +250,16 @@ class Ui_MainPages(object):
         jacket_icon_path = os.path.join(images_dir, "jacket.png")
         belt_icon_path = os.path.join(images_dir, "belt.png")
 
-        self.dress_button = create_item_button(dress_icon_path, lambda: self.add_item("Φόρεμα"))
-        self.skirt_button = create_item_button(skirt_icon_path, lambda: self.add_item("Φούστα"))
-        self.t_shirt_button = create_item_button(t_shirt_icon_path, lambda: self.add_item("Φανέλα"))
-        self.blouse_button = create_item_button(blouse_icon_path, lambda: self.add_item("Μπλούζα"))
-        self.shirt_button = create_item_button(shirt_icon_path, lambda: self.add_item("Πουκάμισο"))
-        self.short_button = create_item_button(short_icon_path, lambda: self.add_item("Σορτσάκι"))
-        self.trouser_button = create_item_button(trouser_icon_path, lambda: self.add_item("Παντελόνι"))
-        self.set_button = create_item_button(set_icon_path, lambda: self.add_item("Σετάκι"))
-        self.jacket_button = create_item_button(jacket_icon_path, lambda: self.add_item("Μπουφάν"))
-        self.belt_button = create_item_button(belt_icon_path, lambda: self.add_item("Ζώνη"))
+        self.dress_button = create_item_button(dress_icon_path, lambda: self.add_item("Φορεμα"))
+        self.skirt_button = create_item_button(skirt_icon_path, lambda: self.add_item("Φουστα"))
+        self.t_shirt_button = create_item_button(t_shirt_icon_path, lambda: self.add_item("Φανελα"))
+        self.blouse_button = create_item_button(blouse_icon_path, lambda: self.add_item("Μπλουζα"))
+        self.shirt_button = create_item_button(shirt_icon_path, lambda: self.add_item("Πουκαμισο"))
+        self.short_button = create_item_button(short_icon_path, lambda: self.add_item("Σορτσακι"))
+        self.trouser_button = create_item_button(trouser_icon_path, lambda: self.add_item("Παντελονι"))
+        self.set_button = create_item_button(set_icon_path, lambda: self.add_item("Σετακι"))
+        self.jacket_button = create_item_button(jacket_icon_path, lambda: self.add_item("Μπουφαν"))
+        self.belt_button = create_item_button(belt_icon_path, lambda: self.add_item("Ζωνη"))
 
         self.top_layout = QHBoxLayout()
 
@@ -507,6 +509,32 @@ class Ui_MainPages(object):
         self.returns_button.hide()
         self.exit_button.hide()
 
+        buttons_layout = QVBoxLayout()
+        self.page_1_layout.addLayout(buttons_layout, Qt.AlignCenter)
+
+        self.exchange_button = PyPushButton("Αλλαγή",
+                                                radius=8,
+                                                color=self.themes["app_color"]["text_foreground"],
+                                                bg_color=self.themes["app_color"]["dark_three"],
+                                                bg_color_hover=self.themes["app_color"]["dark_four"],
+                                                bg_color_pressed=self.themes["app_color"]["bg_five"]
+                                            )
+        icon_size = QSize(60, 60)  # Set the desired size of the icon
+
+        # Load the SVG icon and set its size
+        svg_path = "bank-transfer-icon.svg"
+        icon_image = QImage(Functions.set_svg_icon(svg_path))
+        icon_pixmap = QPixmap.fromImage(icon_image).scaled(icon_size, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+
+        # Set the icon
+        self.exchange_button.setIcon(QIcon(icon_pixmap))
+
+        self.exchange_button.setFixedHeight(80)
+        self.exchange_button.setFixedWidth(200)
+
+        self.exchange_button.clicked.connect(self.handle_exchange_button)
+
+        buttons_layout.addWidget(self.exchange_button)
         self.page_1_layout.addWidget(self.back_button)
         self.back_button.show()
 
@@ -571,6 +599,7 @@ class Ui_MainPages(object):
 
     def generate_receipt(self):
         if self.table_widget:
+            self.invoice_number = self.sales_manager.get_next_invoice_number()
             # Generate the PDF receipt
             self.generate_pdf_receipt()
 
@@ -593,6 +622,12 @@ class Ui_MainPages(object):
         # Header
         c.drawString(280, y_position, "Fancy Shop")
         y_position -= line_height * 4
+
+        c.drawString(50, y_position, current_datetime)
+        y_position -= line_height * 2
+
+        c.drawString(50, y_position, f"Invoice Number: {self.invoice_number}")
+        y_position -= line_height * 2
 
         c.drawString(50, y_position, f"Address:")
         y_position -= line_height * 2
@@ -631,7 +666,6 @@ class Ui_MainPages(object):
         else:
             print("€ not found in total_label text")
         
-        count = 1
         total_profit = 0
         total_VAT = 0
 
@@ -650,7 +684,12 @@ class Ui_MainPages(object):
                 quantity = quantity_item.text()
                 item_name = item_name_item.text()
 
-                c.drawString(80, y_position, str(count))  # Convert row_number to string
+                product_codes = self.sales_manager.record_sale(self.invoice_number, item_name.lower(), int(quantity), cost_value)
+
+                # Join product codes with a slash
+                product_codes_str = "/".join(product_codes)
+
+                c.drawString(80, y_position, product_codes_str)  # Convert row_number to string
                 c.drawString(220, y_position, item_name)
                 c.drawString(370, y_position, quantity)
                 c.drawString(465, y_position, f"€{cost_value_with_VAT*float(quantity):.2f}")
@@ -658,7 +697,6 @@ class Ui_MainPages(object):
                 total_profit += cost_value_with_VAT * int(quantity)
                 
                 y_position -= line_height
-                count = count + 1
         
         total_VAT = (float(total_value) - total_profit)
 
@@ -736,3 +774,7 @@ class Ui_MainPages(object):
             # Draw the PDF content on the printer
             ##painter.drawText(10, 10, pdf_content)
             ##painter.end()
+
+
+    def handle_exchange_button(self):
+        pass

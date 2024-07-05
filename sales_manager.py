@@ -159,3 +159,84 @@ class SalesManager:
         self.update_totals(now, amount, quantity)
         print(f"Recorded sale: {new_record}")
         return product_codes
+    
+    def find_and_delete_record(self, datetime_str, amount, product_type):
+        try:
+            with pd.ExcelFile(self.excel_filename) as reader:
+                df_sales = pd.read_excel(reader, sheet_name='Sales')
+
+            # Normalize and debug print the inputs
+            datetime_str = datetime_str.strip()
+            amount = float(amount)
+            product_type = product_type.lower().strip()
+
+            print(f"Searching for - Date & Time: {datetime_str}, Amount: {amount}, Product Type: {product_type}")
+
+            # Iterate through the DataFrame to find and delete the matching record
+            record_found = False
+            for index, row in df_sales.iterrows():
+                record_datetime_str = row['Date & Time'].strip()
+                record_amount = float(row['Amount'])
+                record_product_type = row['Product Type'].lower().strip()
+
+                print(f"Checking record - Date & Time: {record_datetime_str}, Amount: {record_amount}, Product Type: {record_product_type}")
+
+                if record_datetime_str == datetime_str and record_amount == amount and record_product_type == product_type:
+                    df_sales.drop(index, inplace=True)
+                    record_found = True
+                    break
+
+            if record_found:
+                print(f"Record found and deleted: Date & Time: {datetime_str}, Amount: {amount}, Product Type: {product_type}")
+
+                with pd.ExcelWriter(self.excel_filename, mode='a', if_sheet_exists='replace') as writer:
+                    df_sales.to_excel(writer, sheet_name='Sales', index=False)
+
+                done = self.update_totals_after_deletion(datetime_str, amount, product_type)
+
+                return done
+            else:
+                print(f"No matching record found with Date & Time: {datetime_str}, Amount: {amount}, Product Type: {product_type}")
+                return False
+
+        except Exception as e:
+            print(f"Error finding and deleting record: {e}")
+            return False
+
+    def update_totals_after_deletion(self, datetime_str, amount, product_type):
+        try:
+            date = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
+            daily_date = date.strftime('%Y-%m-%d')
+            monthly_date = date.strftime('%Y-%m')
+            yearly_date = date.strftime('%Y')
+
+            with pd.ExcelFile(self.excel_filename) as reader:
+                df_daily = pd.read_excel(reader, sheet_name='Daily Totals')
+                df_monthly = pd.read_excel(reader, sheet_name='Monthly Totals')
+                df_yearly = pd.read_excel(reader, sheet_name='Yearly Totals')
+
+            def update_total(df, date_column, date_value):
+                if date_value in df[date_column].values:
+                    df.loc[df[date_column] == date_value, 'Total Sales'] -= amount
+                    # Remove the row if the total sales become zero or negative
+                    if df.loc[df[date_column] == date_value, 'Total Sales'].values[0] <= 0:
+                        df = df[df[date_column] != date_value]
+                return df
+
+            df_daily = update_total(df_daily, 'Date', daily_date)
+            df_monthly = update_total(df_monthly, 'Month', monthly_date)
+            df_yearly = update_total(df_yearly, 'Year', yearly_date)
+
+            with pd.ExcelWriter(self.excel_filename, mode='a', if_sheet_exists='replace') as writer:
+                df_daily.to_excel(writer, sheet_name='Daily Totals', index=False)
+                df_monthly.to_excel(writer, sheet_name='Monthly Totals', index=False)
+                df_yearly.to_excel(writer, sheet_name='Yearly Totals', index=False)
+
+            print(f"Totals updated after deletion for Date & Time: {datetime_str}, Amount: {amount}, Product Type: {product_type}")
+
+            return True
+
+        except Exception as e:
+            print(f"Error updating totals after deletion: {e}")
+
+            return False

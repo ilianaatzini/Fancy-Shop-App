@@ -2,6 +2,8 @@
 # ///////////////////////////////////////////////////////////////
 from qt_core import *
 
+from keyboardDialog import KeyboardDialog 
+
 # STYLE
 # ///////////////////////////////////////////////////////////////
 style = '''
@@ -77,4 +79,17 @@ class PyLineEdit(QLineEdit):
             _context_color = context_color
         )
         self.setStyleSheet(style_format)
-        
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            # Show your keyboard dialog
+            keyboard_dialog = KeyboardDialog(parent=self)  # Pass parent widget
+            keyboard_dialog.text_selected.connect(self.append_text_from_keyboard)  # Connect signal to slot
+            keyboard_dialog.exec_()  # Show the dialog modally
+            event.accept()
+
+        super().mousePressEvent(event)
+
+    def append_text_from_keyboard(self, text):
+        self.setText(text)
+        self.setCursorPosition(len(text))

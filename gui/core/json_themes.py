@@ -7,6 +7,8 @@ import os
 # ///////////////////////////////////////////////////////////////
 from gui.core.json_settings import Settings
 
+from utils import resource_path
+
 # APP THEMES
 # ///////////////////////////////////////////////////////////////
 class Themes(object):
@@ -17,12 +19,12 @@ class Themes(object):
 
     # APP PATH
     # ///////////////////////////////////////////////////////////////
-    json_file = f"Python/Applications/Fancy-Shop-App-1/gui/themes/{_settings['theme_name']}.json"
-    app_path = os.path.abspath(os.getcwd())
-    settings_path = os.path.normpath(os.path.join(app_path, json_file))
-    if not os.path.isfile(settings_path):
-        print(f"WARNING: \"Python/Applications/Fancy-Shop-App-1/gui/themes/{_settings['theme_name']}.json\" not found! check in the folder {settings_path}")
+    json_file = f"gui/themes/{_settings['theme_name']}.json"
+    settings_path = resource_path(json_file)
 
+    if not os.path.isfile(settings_path):
+        print(f"WARNING: \"{json_file}\" not found! Check in the folder {settings_path}")
+    
     # INIT SETTINGS
     # ///////////////////////////////////////////////////////////////
     def __init__(self):

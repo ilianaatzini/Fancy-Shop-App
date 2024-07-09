@@ -28,6 +28,7 @@ import platform
 import os
 from sales_manager import SalesManager
 from PyPDF2 import PdfReader, PdfWriter, PageObject
+from utils import resource_path
 
 class Ui_MainPages(object):
 
@@ -230,19 +231,17 @@ class Ui_MainPages(object):
             button.clicked.connect(callback)
             return button
         
-        app_path = os.path.abspath(os.getcwd())
-
-        # Define the absolute paths to the icon files
-        dress_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/dress.png"))
-        skirt_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/skirt.png"))
-        short_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/shorts.png"))
-        trouser_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/trouser.png"))
-        shirt_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/shirt.png"))
-        t_shirt_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/t-shirt.png"))
-        blouse_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/blouse.png"))
-        set_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/clothes.png"))
-        jacket_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/jacket.png"))
-        belt_icon_path = os.path.normpath(os.path.join(app_path, "Python/Applications/Fancy-Shop-App-1/gui/images/svg_images/belt.png"))
+        # Use resource_path function to get the correct path
+        dress_icon_path = resource_path("gui/images/svg_images/dress.png")
+        skirt_icon_path = resource_path("gui/images/svg_images/skirt.png")
+        short_icon_path = resource_path("gui/images/svg_images/shorts.png")
+        trouser_icon_path = resource_path("gui/images/svg_images/trouser.png")
+        shirt_icon_path = resource_path("gui/images/svg_images/shirt.png")
+        t_shirt_icon_path = resource_path("gui/images/svg_images/t-shirt.png")
+        blouse_icon_path = resource_path("gui/images/svg_images/blouse.png")
+        set_icon_path = resource_path("gui/images/svg_images/clothes.png")
+        jacket_icon_path = resource_path("gui/images/svg_images/jacket.png")
+        belt_icon_path = resource_path("gui/images/svg_images/belt.png")
 
         self.dress_button = create_item_button(dress_icon_path, lambda: self.add_item("Φορεμα"))
         self.skirt_button = create_item_button(skirt_icon_path, lambda: self.add_item("Φουστα"))
